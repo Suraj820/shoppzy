@@ -16,16 +16,21 @@ class HomeViewModel(private val getProductUseCase: GetProductUseCase):ViewModel(
     private val _uiState = MutableStateFlow<HomeScreenUIEvents>(HomeScreenUIEvents.Loading)
     val uiState: StateFlow<HomeScreenUIEvents> = _uiState.asStateFlow()
 
+    init {
+        getProducts()
+    }
+
     fun getProducts(){
         viewModelScope.launch{
             getProductUseCase.execute().let { result->
                 when(result){
                     is ResultWrapper.Failure -> {
-                        _uiState.value =
-                            result.exception.message?.let { HomeScreenUIEvents.Error(it) }!!
+                        val error = (result).exception.message?:"something went wrong"
+                        _uiState.value = HomeScreenUIEvents.Error(error)
                     }
                     is ResultWrapper.Success -> {
-                        _uiState.value = HomeScreenUIEvents.Success(result.value)
+                        val data  = (result as ResultWrapper.Success).value
+                        _uiState.value = HomeScreenUIEvents.Success(data)
                     }
                 }
             }
