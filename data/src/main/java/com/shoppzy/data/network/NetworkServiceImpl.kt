@@ -21,9 +21,11 @@ import kotlinx.io.IOException
 
 @Suppress("UNCHECKED_CAST")
 class NetworkServiceImpl(val client: HttpClient): NetworkService{
-    override suspend fun getProducts(): ResultWrapper<List<Product>> {
+    val BASE_URL = "https://fakestoreapi.com"
+    override suspend fun getProducts(category: String?): ResultWrapper<List<Product>> {
+        val url  = if (category != null) "$BASE_URL/products/category/$category" else "$BASE_URL/products"
         return makeWebRequest(
-            url = "https://fakestoreapi.com/products",
+            url = url,
             method = HttpMethod.Get,
             mapper = { dataModules:List<DataProductModel> ->
                 dataModules.map { it.toProduct() }

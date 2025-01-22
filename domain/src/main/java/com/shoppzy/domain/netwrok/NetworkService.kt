@@ -4,7 +4,7 @@ import com.shoppzy.domain.model.Product
 import java.lang.Exception
 
 interface NetworkService {
-    suspend fun getProducts():ResultWrapper<List<Product>>
+    suspend fun getProducts(category: String?):ResultWrapper<List<Product>>
 }
 
 sealed class ResultWrapper<out T>{

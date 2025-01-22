@@ -5,5 +5,5 @@ import com.shoppzy.domain.netwrok.ResultWrapper
 
 interface ProductRepository {
 
-    suspend fun getProduct():ResultWrapper<List<Product>>
+    suspend fun getProduct(category: String?):ResultWrapper<List<Product>>
 }

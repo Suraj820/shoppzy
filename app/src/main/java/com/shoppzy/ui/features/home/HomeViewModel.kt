@@ -17,30 +17,41 @@ class HomeViewModel(private val getProductUseCase: GetProductUseCase):ViewModel(
     val uiState: StateFlow<HomeScreenUIEvents> = _uiState.asStateFlow()
 
     init {
-        getProducts()
+        getAllProducts()
     }
+    private fun getAllProducts(){
+        viewModelScope.launch {
+            _uiState.value = HomeScreenUIEvents.Loading
+            val featuredProducts = getProducts("electronics")
+            val popularProducts = getProducts("jewelery")
+            if (featuredProducts.isEmpty() || popularProducts.isEmpty()){
+                _uiState.value = HomeScreenUIEvents.Error("something went wrong")
+                return@launch
+            }
 
-    fun getProducts(){
-        viewModelScope.launch{
-            getProductUseCase.execute().let { result->
+            _uiState.value = HomeScreenUIEvents.Success(featuredProducts,popularProducts)
+        }
+    }
+    private suspend fun getProducts(category: String?):List<Product>{
+            getProductUseCase.execute(category).let { result->
                 when(result){
                     is ResultWrapper.Failure -> {
-                        val error = (result).exception.message?:"something went wrong"
-                        _uiState.value = HomeScreenUIEvents.Error(error)
+                        //val error = (result).exception.message?:"something went wrong"
+                        //_uiState.value = HomeScreenUIEvents.Error(error)
+                        return emptyList()
                     }
                     is ResultWrapper.Success -> {
-                        val data  = (result as ResultWrapper.Success).value
-                        _uiState.value = HomeScreenUIEvents.Success(data)
+                        return result.value
                     }
                 }
             }
-        }
+
     }
 }
 
 sealed class HomeScreenUIEvents(){
     object Loading:HomeScreenUIEvents()
-    data class Success(val data:List<Product>):HomeScreenUIEvents()
+    data class Success(val featuredProducts:List<Product>,val popularProduct: List<Product>):HomeScreenUIEvents()
     data class Error(val message:String):HomeScreenUIEvents()
 
 
