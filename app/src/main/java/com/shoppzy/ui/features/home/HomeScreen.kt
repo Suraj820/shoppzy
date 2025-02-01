@@ -25,10 +25,17 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -80,7 +87,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
                             ProductItem(product = data[it])
                         }
                     }*/
-                    HomeContent(uiState.featuredProducts, uiState.popularProduct)
+                    HomeContent(uiState.featuredProducts, uiState.popularProduct,uiState.categories)
                 }
             }
         }
@@ -90,13 +97,34 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = koinView
 }
 
 @Composable
-fun HomeContent(featured: List<Product>, popular: List<Product>) {
+fun HomeContent(featured: List<Product>, popular: List<Product>,categories:List<String>) {
     LazyColumn {
         item {
             ProfileHeader()
             Spacer(modifier = Modifier.size(16.dp))
+            SearchBar("") {
+
+            }
+            Spacer(modifier = Modifier.size(16.dp))
+
         }
         item {
+            if (categories.isNotEmpty()){
+                LazyRow {
+                    items(categories.size){
+                        Text(
+                            text = categories[it].replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)).padding(8.dp),
+
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.size(16.dp))
+            }
+
             if (featured.isNotEmpty()) {
                 HomeProductsRow(featured, "Featured")
                 Spacer(modifier = Modifier.size(16.dp))
@@ -107,6 +135,8 @@ fun HomeContent(featured: List<Product>, popular: List<Product>) {
         }
     }
 }
+
+
 
 @Composable
 fun HomeProductsRow(products: List<Product>, title: String) {
@@ -119,7 +149,8 @@ fun HomeProductsRow(products: List<Product>, title: String) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart),
+                fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "View all",
@@ -158,13 +189,16 @@ fun ProductItem(product: Product) {
                     .fillMaxWidth()
                     .height(96.dp),
                 placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                contentScale = ContentScale.FillBounds
             )
             Spacer(modifier = Modifier.size(8.dp))
             Text(
                 text = product.title,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 8.dp),
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = "$${product.price}",
@@ -181,10 +215,11 @@ fun ProductItem(product: Product) {
 @Composable
 fun ProfileHeader(modifier: Modifier = Modifier) {
 
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 8.dp, vertical = 16.dp)
-    ){
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 16.dp)
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.align(Alignment.CenterStart)
@@ -194,14 +229,14 @@ fun ProfileHeader(modifier: Modifier = Modifier) {
                 contentScale = ContentScale.Inside,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(50.dp)
                     .clip(CircleShape)
                     .border(2.dp, Color.White, CircleShape),
                 placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
             )
             Spacer(modifier = Modifier.size(8.dp))
             Column {
-                Text(text = "Hello", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Hello,", style = MaterialTheme.typography.bodySmall)
                 Text(text = "Suraj", style = MaterialTheme.typography.titleMedium)
             }
 
@@ -211,8 +246,54 @@ fun ProfileHeader(modifier: Modifier = Modifier) {
             painter = painterResource(id = R.drawable.ic_notification),
             contentDescription = null,
             modifier = Modifier
-                .align(Alignment.CenterEnd))
+                .size(38.dp)
+                .align(Alignment.CenterEnd)
+                .clip(CircleShape)
+                .background(Color.LightGray.copy(alpha = 0.3f)),
+            contentScale = ContentScale.Inside
+        )
     }
+}
+
+@Composable
+fun SearchBar(value: String, onTextChange: (String) -> Unit) {
+    var previousValue by remember { mutableStateOf("") }
+    TextField(
+        value = previousValue,
+        onValueChange = {
+            previousValue = it
+            onTextChange(it)
+        },
+        modifier = Modifier
+            .padding(horizontal = 8.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(32.dp),
+        placeholder = { Text(text = "Search here", style = MaterialTheme.typography.bodySmall) },
+        leadingIcon = {
+            Image(
+                painter = painterResource(id = R.drawable.ic_search),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+        },
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedContainerColor = Color.LightGray.copy(alpha = 0.3f),
+            unfocusedContainerColor = Color.LightGray.copy(alpha = 0.3f)
+        )
+
+    )
+}
+
+
+
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewSearchBar() {
+
+    SearchBar("") { }
 }
 
 
@@ -221,6 +302,7 @@ fun ProfileHeader(modifier: Modifier = Modifier) {
 private fun PreviewProfileHeader() {
     ProfileHeader()
 }
+
 @Preview(showBackground = true)
 @Composable
 private fun PreviewProductItem() {
@@ -240,22 +322,27 @@ private fun PreviewProductItem() {
 @Preview(showBackground = true)
 @Composable
 private fun PreviewHomeContent() {
-    val featured = listOf(Product(
-        1,
-        "Watch",
-        100.0.toDouble(),
-        "electronics",
-        "Cool watch",
-        "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"
-    ))
+    val featured = listOf(
+        Product(
+            1,
+            "Watch",
+            100.0.toDouble(),
+            "electronics",
+            "Cool watch",
+            "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"
+        )
+    )
 
-    val popular = listOf(Product(
-        1,
-        "Mobile",
-        100.0.toDouble(),
-        "electronics",
-        "Cool watch",
-        "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"
-    ))
-    HomeContent(featured,popular)
+    val popular = listOf(
+        Product(
+            1,
+            "Mobile",
+            100.0.toDouble(),
+            "electronics",
+            "Cool watch",
+            "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg"
+        )
+    )
+    val categories = listOf("electronics","jewelery")
+    HomeContent(featured, popular,categories)
 }
